@@ -406,6 +406,8 @@ private extension String {
     static let ccpaKey = "do_not_sell"
     /// IronSource COPPA metadata key
     static let coppaKey = "is_child_directed"
+    /// IronSource affirmative consent metadata value
     static let yes = "YES"
+    /// IronSource negative consent metadata value
     static let no = "NO"
 }
