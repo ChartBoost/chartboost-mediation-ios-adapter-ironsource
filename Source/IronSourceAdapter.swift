@@ -33,6 +33,7 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     /// The last value set on `setGDPRConsentStatus(_:)`.
     private var gdprStatus: GDPRConsentStatus = .unknown
     
+    /// Ad adapters created on load, keyed by partner placement.
     private var adAdapters: [String: IronSourceAdAdapter] = [:]
     
     /// Does any setup needed before beginning to load ads.
