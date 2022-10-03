@@ -96,6 +96,7 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     /// - parameter hasGivenConsent: A boolean indicating if the user has given consent.
     /// - parameter privacyString: A IAB-compliant string indicating the CCPA status.
     func setCCPAConsent(hasGivenConsent: Bool, privacyString: String?) {
+        // IronSource supports only a boolean value, privacyString is ignored
         let key: String = .ccpaKey
         let value: String = hasGivenConsent ? .yes : .no
         IronSource.setMetaDataWithKey(key, value: value)
