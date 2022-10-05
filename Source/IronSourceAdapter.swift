@@ -33,8 +33,8 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     /// The last value set on `setGDPRConsentStatus(_:)`.
     private var gdprStatus: GDPRConsentStatus = .unknown
     
-    /// Ad adapters created on load, keyed by partner placement.
-    private var adAdapters: [String: IronSourceAdAdapter] = [:]
+    /// Ads created on load, keyed by partner placement.
+    private var ads: [String: IronSourceAdapter.Ad] = [:]
     
     /// Does any setup needed before beginning to load ads.
     /// - parameter configuration: Configuration data for the adapter to set up.
@@ -121,8 +121,8 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     func load(request: PartnerAdLoadRequest, partnerAdDelegate: PartnerAdDelegate, viewController: UIViewController?, completion: @escaping (Result<PartnerAd, Error>) -> Void) {
         log(.loadStarted(request))
         
-        // Create ad adapter and save it
-        adAdapters[request.partnerPlacement] = IronSourceAdAdapter(
+        // Create ad and save it
+        ads[request.partnerPlacement] = IronSourceAdapter.Ad(
             request: request,
             delegate: partnerAdDelegate,
             loadCompletion: completion
@@ -152,8 +152,8 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
             IronSource.loadISDemandOnlyRewardedVideo(request.partnerPlacement)
             
         case .banner:
-            // Remove previously created ad adapter
-            adAdapters[request.partnerPlacement] = nil
+            // Remove previously created ad
+            ads[request.partnerPlacement] = nil
             // Fail immediately
             let error = error(.loadFailure(request), description: "Ad format not supported")
             log(.loadFailed(request, error: error))
@@ -170,15 +170,15 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     func show(_ partnerAd: PartnerAd, viewController: UIViewController, completion: @escaping (Result<PartnerAd, Error>) -> Void) {
         log(.showStarted(partnerAd))
         
-        // Fail if no ad adapter available
-        guard let adAdapter = adAdapters[partnerAd.request.partnerPlacement] else {
+        // Fail if no ad available
+        guard let ad = ads[partnerAd.request.partnerPlacement] else {
             let error = error(.noAdReadyToShow(partnerAd))
             log(.showFailed(partnerAd, error: error))
             completion(.failure(error))
             return
         }
         // Keep show completion to execute it later
-        adAdapter.showCompletion = completion
+        ad.showCompletion = completion
         
         switch partnerAd.request.format {
         case .interstitial:
@@ -218,42 +218,43 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     /// - parameter completion: Closure to be performed once the ad has been invalidated.
     func invalidate(_ partnerAd: PartnerAd, completion: @escaping (Result<PartnerAd, Error>) -> Void) {
         log(.invalidateStarted(partnerAd))
-        if adAdapters[partnerAd.request.partnerPlacement] == nil {
+        if ads[partnerAd.request.partnerPlacement] == nil {
             // Fail if no ad to invalidate
             let error = error(.noAdToInvalidate(partnerAd))
             log(.invalidateFailed(partnerAd, error: error))
             completion(.failure(error))
         } else {
             // Succeed if we had an ad
-            adAdapters[partnerAd.request.partnerPlacement] = nil
+            ads[partnerAd.request.partnerPlacement] = nil
             log(.invalidateSucceeded(partnerAd))
             completion(.success(partnerAd))
         }
     }
 }
 
-/// Holds all the info relative to an ad.
-class IronSourceAdAdapter {
-    
-    /// The load request that originated this ad.
-    let request: PartnerAdLoadRequest
-    
-    /// The partner ad delegate to send ad life-cycle events to.
-    private(set) weak var delegate: PartnerAdDelegate?
-    
-    /// The completion for the ongoing load operation.
-    var loadCompletion: ((Result<PartnerAd, Error>) -> Void)?
-    
-    /// The completion for the ongoing show operation.
-    var showCompletion: ((Result<PartnerAd, Error>) -> Void)?
-    
-    /// The partner ad model passed in PartnerAdDelegate callbacks.
-    lazy var partnerAd = PartnerAd(ad: nil, details: [:], request: request)
-    
-    init(request: PartnerAdLoadRequest, delegate: PartnerAdDelegate, loadCompletion: @escaping (Result<PartnerAd, Error>) -> Void) {
-        self.request = request
-        self.delegate = delegate
-        self.loadCompletion = loadCompletion
+extension IronSourceAdapter {
+    /// Holds all the info relative to an ad.
+    class Ad {
+        /// The load request that originated this ad.
+        let request: PartnerAdLoadRequest
+        
+        /// The partner ad delegate to send ad life-cycle events to.
+        private(set) weak var delegate: PartnerAdDelegate?
+        
+        /// The completion for the ongoing load operation.
+        var loadCompletion: ((Result<PartnerAd, Error>) -> Void)?
+        
+        /// The completion for the ongoing show operation.
+        var showCompletion: ((Result<PartnerAd, Error>) -> Void)?
+        
+        /// The partner ad model passed in PartnerAdDelegate callbacks.
+        lazy var partnerAd = PartnerAd(ad: nil, details: [:], request: request)
+        
+        init(request: PartnerAdLoadRequest, delegate: PartnerAdDelegate, loadCompletion: @escaping (Result<PartnerAd, Error>) -> Void) {
+            self.request = request
+            self.delegate = delegate
+            self.loadCompletion = loadCompletion
+        }
     }
 }
 
@@ -263,132 +264,132 @@ extension IronSourceAdapter: CHBHIronSourceWrapperDelegate {
     // MARK: ISDemandOnlyInterstitialDelegate
     
     func interstitialDidLoad(_ instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report load success
-        log(.loadSucceeded(adapter.partnerAd))
-        adapter.loadCompletion?(.success(adapter.partnerAd)) ?? log(.loadResultIgnored)
-        adapter.loadCompletion = nil
+        log(.loadSucceeded(ad.partnerAd))
+        ad.loadCompletion?(.success(ad.partnerAd)) ?? log(.loadResultIgnored)
+        ad.loadCompletion = nil
     }
     
     func interstitialDidFailToLoadWithError(_ partnerError: Error, instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report load failure
-        adAdapters[instanceId] = nil
-        let error = error(.loadFailure(adapter.request), error: partnerError)
-        log(.loadFailed(adapter.request, error: error))
-        adapter.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
-        adapter.showCompletion = nil
+        ads[instanceId] = nil
+        let error = error(.loadFailure(ad.request), error: partnerError)
+        log(.loadFailed(ad.request, error: error))
+        ad.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
+        ad.showCompletion = nil
     }
     
     func interstitialDidOpen(_ instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report show success
-        log(.showSucceeded(adapter.partnerAd))
-        adapter.showCompletion?(.success(adapter.partnerAd)) ?? log(.showResultIgnored)
-        adapter.showCompletion = nil
+        log(.showSucceeded(ad.partnerAd))
+        ad.showCompletion?(.success(ad.partnerAd)) ?? log(.showResultIgnored)
+        ad.showCompletion = nil
     }
     
     func interstitialDidFailToShowWithError(_ partnerError: Error, instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report show failure
-        let error = error(.showFailure(adapter.partnerAd), error: partnerError)
-        log(.showFailed(adapter.partnerAd, error: error))
-        adapter.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
-        adapter.showCompletion = nil
+        let error = error(.showFailure(ad.partnerAd), error: partnerError)
+        log(.showFailed(ad.partnerAd, error: error))
+        ad.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
+        ad.showCompletion = nil
     }
     
     func interstitialDidClose(_ instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report dismiss
-        log(.didDismiss(adapter.partnerAd, error: nil))
-        adapter.delegate?.didDismiss(adapter.partnerAd, error: nil) ?? log(.delegateUnavailable)
+        log(.didDismiss(ad.partnerAd, error: nil))
+        ad.delegate?.didDismiss(ad.partnerAd, error: nil) ?? log(.delegateUnavailable)
     }
     
     func didClickInterstitial(_ instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report click
-        log(.didClick(adapter.partnerAd, error: nil))
-        adapter.delegate?.didClick(adapter.partnerAd) ?? log(.delegateUnavailable)
+        log(.didClick(ad.partnerAd, error: nil))
+        ad.delegate?.didClick(ad.partnerAd) ?? log(.delegateUnavailable)
     }
     
     // MARK: ISDemandOnlyRewardedVideoDelegate
     
     func rewardedVideoDidLoad(_ instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report load success
-        log(.loadSucceeded(adapter.partnerAd))
-        adapter.loadCompletion?(.success(adapter.partnerAd)) ?? log(.loadResultIgnored)
-        adapter.loadCompletion = nil
+        log(.loadSucceeded(ad.partnerAd))
+        ad.loadCompletion?(.success(ad.partnerAd)) ?? log(.loadResultIgnored)
+        ad.loadCompletion = nil
     }
     
     func rewardedVideoDidFailToLoadWithError(_ partnerError: Error, instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report load failure
-        adAdapters[instanceId] = nil
-        let error = error(.loadFailure(adapter.request), error: partnerError)
-        log(.loadFailed(adapter.request, error: error))
-        adapter.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
-        adapter.showCompletion = nil
+        ads[instanceId] = nil
+        let error = error(.loadFailure(ad.request), error: partnerError)
+        log(.loadFailed(ad.request, error: error))
+        ad.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
+        ad.showCompletion = nil
     }
     
     func rewardedVideoDidOpen(_ instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report show success
-        log(.showSucceeded(adapter.partnerAd))
-        adapter.showCompletion?(.success(adapter.partnerAd)) ?? log(.showResultIgnored)
-        adapter.showCompletion = nil
+        log(.showSucceeded(ad.partnerAd))
+        ad.showCompletion?(.success(ad.partnerAd)) ?? log(.showResultIgnored)
+        ad.showCompletion = nil
     }
     
     func rewardedVideoDidFailToShowWithError(_ partnerError: Error, instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report show failure
-        let error = error(.showFailure(adapter.partnerAd), error: partnerError)
-        log(.showFailed(adapter.partnerAd, error: error))
-        adapter.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
-        adapter.showCompletion = nil
+        let error = error(.showFailure(ad.partnerAd), error: partnerError)
+        log(.showFailed(ad.partnerAd, error: error))
+        ad.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
+        ad.showCompletion = nil
     }
     
     func rewardedVideoDidClose(_ instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report dismiss
-        log(.didDismiss(adapter.partnerAd, error: nil))
-        adapter.delegate?.didDismiss(adapter.partnerAd, error: nil) ?? log(.delegateUnavailable)
+        log(.didDismiss(ad.partnerAd, error: nil))
+        ad.delegate?.didDismiss(ad.partnerAd, error: nil) ?? log(.delegateUnavailable)
     }
     
     func rewardedVideoDidClick(_ instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report click
-        log(.didClick(adapter.partnerAd, error: nil))
-        adapter.delegate?.didClick(adapter.partnerAd) ?? log(.delegateUnavailable)
+        log(.didClick(ad.partnerAd, error: nil))
+        ad.delegate?.didClick(ad.partnerAd) ?? log(.delegateUnavailable)
     }
     
     func rewardedVideoAdRewarded(_ instanceId: String) {
-        guard let adapter = adAdapter(for: instanceId) else { return }
+        guard let ad = ad(for: instanceId) else { return }
         
         // Report reward
         let reward = Reward(amount: nil, label: nil)
-        log(.didReward(adapter.partnerAd, reward: reward))
-        adapter.delegate?.didReward(adapter.partnerAd, reward: reward) ?? log(.delegateUnavailable)
+        log(.didReward(ad.partnerAd, reward: reward))
+        ad.delegate?.didReward(ad.partnerAd, reward: reward) ?? log(.delegateUnavailable)
     }
     
     /// Fetches a stored ad adapter and logs an error if none is found.
-    private func adAdapter(for partnerPlacement: String, functionName: StaticString = #function) -> IronSourceAdAdapter? {
-        if adAdapters[partnerPlacement] == nil {
+    private func ad(for partnerPlacement: String, functionName: StaticString = #function) -> IronSourceAdapter.Ad? {
+        if ads[partnerPlacement] == nil {
             log("\(functionName) call ignored with instanceId \(partnerPlacement)")
         }
-        return adAdapters[partnerPlacement]
+        return ads[partnerPlacement]
     }
 }
 
