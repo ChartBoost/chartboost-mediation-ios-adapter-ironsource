@@ -212,7 +212,7 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     }
     
     /// Invalidates a loaded ad, freeing up its memory and resetting the adapter to state where it can load a new ad.
-    /// - note: Helium SDK will call this method to inform that it won't be showning this ad and thus it should be discarded.
+    /// - note: Helium SDK will call this method to inform that it won't be showing this ad and thus it should be discarded.
     /// It will also be called on `PartnerAdDelegate.didDismiss(partnerAd:error:)`.
     /// - parameter partnerAd: The ad to invalidate.
     /// - parameter completion: Closure to be performed once the ad has been invalidated.
