@@ -8,7 +8,8 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-@protocol CHBHIronSourceWrapperDelegate;
+@protocol CHBHIronSourceWrapperInterstitialDelegate;
+@protocol CHBHIronSourceWrapperRewardedDelegate;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -55,19 +56,19 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (void)initISDemandOnly:(NSString *)appKey adUnits:(NSArray<NSString *> *)adUnits;
 
-// WARNING: THIS METHOD TAKES IN A `CHBHIronSourceWrapperDelegate` WITH THE ASSUMPTION THAT IT CAN BE CASTED AS A `ISDemandOnlyInterstitialDelegate`
+// WARNING: THIS METHOD TAKES IN A `CHBHIronSourceWrapperInterstitialDelegate` WITH THE ASSUMPTION THAT IT CAN BE CASTED AS A `ISDemandOnlyInterstitialDelegate`
 /**
  @abstract Sets the delegate for demand only interstitial callbacks.
  @param delegate The 'ISDemandOnlyInterstitialDelegate' for IronSource to send callbacks to.
  */
-+ (void)setISDemandOnlyInterstitialDelegate:(id<CHBHIronSourceWrapperDelegate>)delegate;
++ (void)setISDemandOnlyInterstitialDelegate:(id<CHBHIronSourceWrapperInterstitialDelegate>)delegate;
 
-// WARNING: THIS METHOD TAKES IN A `CHBHIronSourceWrapperDelegate` WITH THE ASSUMPTION THAT IT CAN BE CASTED AS A `ISDemandOnlyRewardedVideoDelegate`
+// WARNING: THIS METHOD TAKES IN A `CHBHIronSourceWrapperRewardedDelegate` WITH THE ASSUMPTION THAT IT CAN BE CASTED AS A `ISDemandOnlyRewardedVideoDelegate`
 /**
  @abstract Sets the delegate for demand only rewarded video callbacks.
  @param delegate The 'ISDemandOnlyRewardedVideoDelegate' for IronSource to send callbacks to.
  */
-+ (void)setISDemandOnlyRewardedVideoDelegate:(id<CHBHIronSourceWrapperDelegate>)delegate;
++ (void)setISDemandOnlyRewardedVideoDelegate:(id<CHBHIronSourceWrapperRewardedDelegate>)delegate;
 
 /**
  @abstract Loads a demand only interstitial.
@@ -115,13 +116,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-#pragma mark - CHBHIronSourceWrapperDelegate
+#pragma mark - CHBHIronSourceWrapperInterstitialDelegate
 
 /**
- @abstract A redefinition of IronSource SDK delegate protocols.
- @discussion This protocol should define the same methods found in `ISDemandOnlyInterstitialDelegate` and `ISDemandOnlyRewardedVideoDelegate`.
+ @abstract A redefinition of IronSource SDK interstitial delegate protocol.
+ @discussion This protocol should define the same methods found in `ISDemandOnlyInterstitialDelegate`.
  */
-@protocol CHBHIronSourceWrapperDelegate <NSObject>
+@protocol CHBHIronSourceWrapperInterstitialDelegate <NSObject>
 
 #pragma mark ISDemandOnlyInterstitialDelegate
 
@@ -158,6 +159,16 @@ NS_ASSUME_NONNULL_BEGIN
  Called after an interstitial has been clicked.
  */
 - (void)didClickInterstitial:(NSString *)instanceId;
+
+@end
+
+#pragma mark - CHBHIronSourceWrapperRewardedDelegate
+
+/**
+ @abstract A redefinition of IronSource SDK rewarded delegate protocol.
+ @discussion This protocol should define the same methods found in `ISDemandOnlyRewardedVideoDelegate`.
+ */
+@protocol CHBHIronSourceWrapperRewardedDelegate <NSObject>
 
 #pragma mark ISDemandOnlyRewardedVideoDelegate
 

@@ -9,7 +9,7 @@ import Foundation
 import HeliumSdk
 
 /// An IronSource wrapper compatible with Swift.
-private typealias IronSource = CHBHIronSourceWrapper
+typealias IronSource = CHBHIronSourceWrapper
 
 /// The Helium IronSource adapter.
 final class IronSourceAdapter: NSObject, PartnerAdapter {
@@ -33,8 +33,16 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     /// The last value set on `setGDPRConsentStatus(_:)`.
     private var gdprStatus: GDPRConsentStatus = .unknown
     
-    /// Ads created on load, keyed by partner placement.
-    private var ads: [String: IronSourceAdapter.Ad] = [:]
+    /// Ad storage managed by Helium SDK.
+    private let storage: PartnerAdapterStorage
+    
+    /// The designated initializer for the adapter.
+    /// Helium SDK will use this constructor to create instances of conforming types.
+    /// - parameter storage: An object that exposes storage managed by the Helium SDK to the adapter.
+    /// It includes a list of created `PartnerAd` instances. You may ignore this parameter if you don't need it.
+    init(storage: PartnerAdapterStorage) {
+        self.storage = storage
+    }
     
     /// Does any setup needed before beginning to load ads.
     /// - parameter configuration: Configuration data for the adapter to set up.
@@ -50,6 +58,9 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
         }
         // Initialize IronSource
         IronSource.initISDemandOnly(appKey, adUnits: configuration.lineItems ?? [])
+        
+        // IronSource provides one delegate for all ads of the same type.
+        // IronSourceAdapter implements these delegate protocols and forwards calls to the corresponding partner ad instances.
         IronSource.setISDemandOnlyInterstitialDelegate(self)
         IronSource.setISDemandOnlyRewardedVideoDelegate(self)
         
@@ -60,11 +71,9 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     /// Fetches bidding tokens needed for the partner to participate in an auction.
     /// - parameter request: Information about the ad load request.
     /// - parameter completion: Closure to be performed with the fetched info.
-    func fetchBidderInformation(request: PreBidRequest, completion: @escaping ([String : String]) -> Void) {
+    func fetchBidderInformation(request: PreBidRequest, completion: @escaping ([String : String]?) -> Void) {
         // IronSource does not currently provide any bidding token
-        log(.fetchBidderInfoStarted(request))
-        log(.fetchBidderInfoSucceeded(request))
-        completion([:])
+        completion(nil)
     }
     
     /// Indicates if GDPR applies or not.
@@ -112,284 +121,106 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
         log(.privacyUpdated(setting: "metaDataWithKey", value: [key: value]))
     }
     
-    /// Loads an ad.
-    /// - note: Helium SDK will keep the `PartnerAd` returned in the completion, so keeping a strong reference to the loaded ad in the adapter might not be necessary.
+    /// Creates a new ad object in charge of communicating with a single partner SDK ad instance.
+    /// Helium SDK calls this method to create a new ad for each new load request. Ad instances are never reused.
+    /// Helium SDK takes care of storing and disposing of ad instances so you don't need to.
+    /// `invalidate()` is called on ads before disposing of them in case partners need to perform any custom logic before the object gets destroyed.
+    /// If for some reason a new ad cannot be provided an error should be thrown.
     /// - parameter request: Information about the ad load request.
-    /// - parameter partnerAdDelegate: The delegate that will receive ad life-cycle notifications.
-    /// - parameter viewController: The view controller on which the ad will be presented on. Needed on load for some banners.
-    /// - parameter completion: Closure to be performed once the ad has been loaded.
-    func load(request: PartnerAdLoadRequest, partnerAdDelegate: PartnerAdDelegate, viewController: UIViewController?, completion: @escaping (Result<PartnerAd, Error>) -> Void) {
-        log(.loadStarted(request))
-        
-        // Create ad and save it
-        ads[request.partnerPlacement] = IronSourceAdapter.Ad(
-            request: request,
-            delegate: partnerAdDelegate,
-            loadCompletion: completion
-        )
-        
+    /// - parameter delegate: The delegate that will receive ad life-cycle notifications.
+    func makeAd(request: PartnerAdLoadRequest, delegate: PartnerAdDelegate) throws -> PartnerAd {
         switch request.format {
         case .interstitial:
-            // If ad already loaded succeed immediately
-            guard !IronSource.hasISDemandOnlyInterstitial(request.partnerPlacement) else {
-                let ad = PartnerAd(ad: nil, details: [:], request: request)
-                log(.loadSucceeded(ad))
-                completion(.success(ad))
-                return
-            }
-            // Start loading
-            IronSource.loadISDemandOnlyInterstitial(request.partnerPlacement)
-            
+            return IronSourceAdapterInterstitialAd(adapter: self, request: request, delegate: delegate)
         case .rewarded:
-            // If ad already loaded succeed immediately
-            guard !IronSource.hasISDemandOnlyRewardedVideo(request.partnerPlacement) else {
-                let ad = PartnerAd(ad: nil, details: [:], request: request)
-                log(.loadSucceeded(ad))
-                completion(.success(ad))
-                return
-            }
-            // Start loading
-            IronSource.loadISDemandOnlyRewardedVideo(request.partnerPlacement)
-            
+            return IronSourceAdapterRewardedAd(adapter: self, request: request, delegate: delegate)
         case .banner:
-            // Remove previously created ad
-            ads[request.partnerPlacement] = nil
-            // Fail immediately
-            let error = error(.loadFailure(request), description: "Ad format not supported")
-            log(.loadFailed(request, error: error))
-            completion(.failure(error))
-        }
-    }
-        
-    /// Shows a loaded ad.
-    /// It will not get called for banner ads.
-    /// - note: Helium SDK will keep the `PartnerAd` alive until it is dismissed, so keeping a strong reference to the ad in the adapter might not be necessary.
-    /// - parameter partnerAd: The ad to show.
-    /// - parameter viewController: The view controller on which the ad will be presented on.
-    /// - parameter completion: Closure to be performed once the ad has been shown.
-    func show(_ partnerAd: PartnerAd, viewController: UIViewController, completion: @escaping (Result<PartnerAd, Error>) -> Void) {
-        log(.showStarted(partnerAd))
-        
-        // Fail if no ad available
-        guard let ad = ads[partnerAd.request.partnerPlacement] else {
-            let error = error(.noAdReadyToShow(partnerAd))
-            log(.showFailed(partnerAd, error: error))
-            completion(.failure(error))
-            return
-        }
-        // Keep show completion to execute it later
-        ad.showCompletion = completion
-        
-        switch partnerAd.request.format {
-        case .interstitial:
-            // If ad not loaded fail immediately
-            guard IronSource.hasISDemandOnlyInterstitial(partnerAd.request.partnerPlacement) else {
-                let error = error(.noAdReadyToShow(partnerAd), description: "IronSource hasISDemandOnlyInterstitial is false")
-                log(.showFailed(partnerAd, error: error))
-                completion(.failure(error))
-                return
-            }
-            // Show ad
-            IronSource.showISDemandOnlyInterstitial(viewController, instanceId: partnerAd.request.partnerPlacement)
-            
-        case .rewarded:
-            // If ad not loaded fail immediately
-            guard IronSource.hasISDemandOnlyRewardedVideo(partnerAd.request.partnerPlacement) else {
-                let error = error(.noAdReadyToShow(partnerAd), description: "IronSource hasISDemandOnlyRewardedVideo is false")
-                log(.showFailed(partnerAd, error: error))
-                completion(.failure(error))
-                return
-            }
-            // Show ad
-            IronSource.showISDemandOnlyRewardedVideo(viewController, instanceId: partnerAd.request.partnerPlacement)
-            
-        case .banner:
-            // Fail immediately
-            let error = error(.showFailure(partnerAd), description: "Ad format not supported")
-            log(.showFailed(partnerAd, error: error))
-            completion(.failure(error))
-        }
-    }
-    
-    /// Invalidates a loaded ad, freeing up its memory and resetting the adapter to state where it can load a new ad.
-    /// - note: Helium SDK will call this method to inform that it won't be showing this ad and thus it should be discarded.
-    /// It will also be called on `PartnerAdDelegate.didDismiss(partnerAd:error:)`.
-    /// - parameter partnerAd: The ad to invalidate.
-    /// - parameter completion: Closure to be performed once the ad has been invalidated.
-    func invalidate(_ partnerAd: PartnerAd, completion: @escaping (Result<PartnerAd, Error>) -> Void) {
-        log(.invalidateStarted(partnerAd))
-        if ads[partnerAd.request.partnerPlacement] == nil {
-            // Fail if no ad to invalidate
-            let error = error(.noAdToInvalidate(partnerAd))
-            log(.invalidateFailed(partnerAd, error: error))
-            completion(.failure(error))
-        } else {
-            // Succeed if we had an ad
-            ads[partnerAd.request.partnerPlacement] = nil
-            log(.invalidateSucceeded(partnerAd))
-            completion(.success(partnerAd))
+            throw error(.adFormatNotSupported(request))
         }
     }
 }
 
-extension IronSourceAdapter {
-    /// Holds all the info relative to an ad.
-    class Ad {
-        /// The load request that originated this ad.
-        let request: PartnerAdLoadRequest
-        
-        /// The partner ad delegate to send ad life-cycle events to.
-        private(set) weak var delegate: PartnerAdDelegate?
-        
-        /// The completion for the ongoing load operation.
-        var loadCompletion: ((Result<PartnerAd, Error>) -> Void)?
-        
-        /// The completion for the ongoing show operation.
-        var showCompletion: ((Result<PartnerAd, Error>) -> Void)?
-        
-        /// The partner ad model passed in PartnerAdDelegate callbacks.
-        lazy var partnerAd = PartnerAd(ad: nil, details: [:], request: request)
-        
-        init(request: PartnerAdLoadRequest, delegate: PartnerAdDelegate, loadCompletion: @escaping (Result<PartnerAd, Error>) -> Void) {
-            self.request = request
-            self.delegate = delegate
-            self.loadCompletion = loadCompletion
-        }
-    }
-}
+// MARK: ISDemandOnlyInterstitialDelegate
 
-// IronSource delegate protocols conformance
-extension IronSourceAdapter: CHBHIronSourceWrapperDelegate {
-    
-    // MARK: ISDemandOnlyInterstitialDelegate
+extension IronSourceAdapter: CHBHIronSourceWrapperInterstitialDelegate {
     
     func interstitialDidLoad(_ instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report load success
-        log(.loadSucceeded(ad.partnerAd))
-        ad.loadCompletion?(.success(ad.partnerAd)) ?? log(.loadResultIgnored)
-        ad.loadCompletion = nil
+        interstitialAd(for: instanceId)?.interstitialDidLoad(instanceId)
     }
     
-    func interstitialDidFailToLoadWithError(_ partnerError: Error, instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report load failure
-        ads[instanceId] = nil
-        let error = error(.loadFailure(ad.request), error: partnerError)
-        log(.loadFailed(ad.request, error: error))
-        ad.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
-        ad.showCompletion = nil
+    func interstitialDidFailToLoadWithError(_ error: Error, instanceId: String) {
+        interstitialAd(for: instanceId)?.interstitialDidFailToLoadWithError(error, instanceId: instanceId)
     }
     
     func interstitialDidOpen(_ instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report show success
-        log(.showSucceeded(ad.partnerAd))
-        ad.showCompletion?(.success(ad.partnerAd)) ?? log(.showResultIgnored)
-        ad.showCompletion = nil
+        interstitialAd(for: instanceId)?.interstitialDidOpen(instanceId)
     }
     
-    func interstitialDidFailToShowWithError(_ partnerError: Error, instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report show failure
-        let error = error(.showFailure(ad.partnerAd), error: partnerError)
-        log(.showFailed(ad.partnerAd, error: error))
-        ad.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
-        ad.showCompletion = nil
+    func interstitialDidFailToShowWithError(_ error: Error, instanceId: String) {
+        interstitialAd(for: instanceId)?.interstitialDidFailToShowWithError(error, instanceId: instanceId)
     }
     
     func interstitialDidClose(_ instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report dismiss
-        log(.didDismiss(ad.partnerAd, error: nil))
-        ad.delegate?.didDismiss(ad.partnerAd, error: nil) ?? log(.delegateUnavailable)
+        interstitialAd(for: instanceId)?.interstitialDidClose(instanceId)
     }
     
     func didClickInterstitial(_ instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report click
-        log(.didClick(ad.partnerAd, error: nil))
-        ad.delegate?.didClick(ad.partnerAd) ?? log(.delegateUnavailable)
+        interstitialAd(for: instanceId)?.didClickInterstitial(instanceId)
     }
-    
-    // MARK: ISDemandOnlyRewardedVideoDelegate
+}
+
+// MARK: ISDemandOnlyRewardedVideoDelegate
+
+extension IronSourceAdapter: CHBHIronSourceWrapperRewardedDelegate {
     
     func rewardedVideoDidLoad(_ instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report load success
-        log(.loadSucceeded(ad.partnerAd))
-        ad.loadCompletion?(.success(ad.partnerAd)) ?? log(.loadResultIgnored)
-        ad.loadCompletion = nil
+        rewardedAd(for: instanceId)?.rewardedVideoDidLoad(instanceId)
     }
     
-    func rewardedVideoDidFailToLoadWithError(_ partnerError: Error, instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report load failure
-        ads[instanceId] = nil
-        let error = error(.loadFailure(ad.request), error: partnerError)
-        log(.loadFailed(ad.request, error: error))
-        ad.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
-        ad.showCompletion = nil
+    func rewardedVideoDidFailToLoadWithError(_ error: Error, instanceId: String) {
+        rewardedAd(for: instanceId)?.rewardedVideoDidFailToLoadWithError(error, instanceId: instanceId)
     }
     
     func rewardedVideoDidOpen(_ instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report show success
-        log(.showSucceeded(ad.partnerAd))
-        ad.showCompletion?(.success(ad.partnerAd)) ?? log(.showResultIgnored)
-        ad.showCompletion = nil
+        rewardedAd(for: instanceId)?.rewardedVideoDidOpen(instanceId)
     }
     
-    func rewardedVideoDidFailToShowWithError(_ partnerError: Error, instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report show failure
-        let error = error(.showFailure(ad.partnerAd), error: partnerError)
-        log(.showFailed(ad.partnerAd, error: error))
-        ad.showCompletion?(.failure(error)) ?? log(.showResultIgnored)
-        ad.showCompletion = nil
+    func rewardedVideoDidFailToShowWithError(_ error: Error, instanceId: String) {
+        rewardedAd(for: instanceId)?.rewardedVideoDidFailToShowWithError(error, instanceId: instanceId)
     }
     
     func rewardedVideoDidClose(_ instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report dismiss
-        log(.didDismiss(ad.partnerAd, error: nil))
-        ad.delegate?.didDismiss(ad.partnerAd, error: nil) ?? log(.delegateUnavailable)
+        rewardedAd(for: instanceId)?.rewardedVideoDidClose(instanceId)
     }
     
     func rewardedVideoDidClick(_ instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report click
-        log(.didClick(ad.partnerAd, error: nil))
-        ad.delegate?.didClick(ad.partnerAd) ?? log(.delegateUnavailable)
+        rewardedAd(for: instanceId)?.rewardedVideoDidClick(instanceId)
     }
     
     func rewardedVideoAdRewarded(_ instanceId: String) {
-        guard let ad = ad(for: instanceId) else { return }
-        
-        // Report reward
-        let reward = Reward(amount: nil, label: nil)
-        log(.didReward(ad.partnerAd, reward: reward))
-        ad.delegate?.didReward(ad.partnerAd, reward: reward) ?? log(.delegateUnavailable)
+        rewardedAd(for: instanceId)?.rewardedVideoAdRewarded(instanceId)
     }
+}
+
+// MARK: - Delegate Helpers
+
+private extension IronSourceAdapter {
     
     /// Fetches a stored ad adapter and logs an error if none is found.
-    private func ad(for partnerPlacement: String, functionName: StaticString = #function) -> IronSourceAdapter.Ad? {
-        if ads[partnerPlacement] == nil {
+    func ad(for partnerPlacement: String, functionName: StaticString = #function) -> PartnerAd? {
+        guard let ad = storage.ads.first(where: { $0.request.partnerPlacement == partnerPlacement }) else {
             log("\(functionName) call ignored with instanceId \(partnerPlacement)")
+            return nil
         }
-        return ads[partnerPlacement]
+        return ad
+    }
+    
+    func interstitialAd(for partnerPlacement: String, functionName: StaticString = #function) -> IronSourceAdapterInterstitialAd? {
+        ad(for: partnerPlacement, functionName: functionName) as? IronSourceAdapterInterstitialAd
+    }
+    
+    func rewardedAd(for partnerPlacement: String, functionName: StaticString = #function) -> IronSourceAdapterRewardedAd? {
+        ad(for: partnerPlacement, functionName: functionName) as? IronSourceAdapterRewardedAd
     }
 }
 
