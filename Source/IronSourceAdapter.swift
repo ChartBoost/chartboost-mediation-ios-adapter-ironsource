@@ -26,13 +26,7 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     
     /// The partner's name in a human-friendly version.
     let partnerDisplayName = "IronSource"
-    
-    /// The last value set on `setGDPRApplies(_:)`.
-    private var gdprApplies = false
-    
-    /// The last value set on `setGDPRConsentStatus(_:)`.
-    private var gdprStatus: GDPRConsentStatus = .unknown
-    
+        
     /// Ad storage managed by Helium SDK.
     private let storage: PartnerAdapterStorage
     
@@ -76,26 +70,12 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
         completion(nil)
     }
     
-    /// Indicates if GDPR applies or not.
-    /// - parameter applies: `true` if GDPR applies, `false` otherwise.
-    func setGDPRApplies(_ applies: Bool) {
-        // Save value and set GDPR on IronSource using both gdprApplies and gdprStatus
-        gdprApplies = applies
-        updateGDPRConsent()
-    }
-    
-    /// Indicates the user's GDPR consent status.
+    /// Indicates if GDPR applies or not and the user's GDPR consent status.
+    /// - parameter applies: `true` if GDPR applies, `false` if not, `nil` if the publisher has not provided this information.
     /// - parameter status: One of the `GDPRConsentStatus` values depending on the user's preference.
-    func setGDPRConsentStatus(_ status: GDPRConsentStatus) {
-        // Save value and set GDPR on IronSource using both gdprApplies and gdprStatus
-        gdprStatus = status
-        updateGDPRConsent()
-    }
-    
-    private func updateGDPRConsent() {
-        // Set IronSource GDPR consent using both gdprApplies and gdprStatus
-        if gdprApplies {
-            let value = gdprStatus == .granted
+    func setGDPR(applies: Bool?, status: GDPRConsentStatus) {
+        if applies == true {
+            let value = status == .granted
             IronSource.setConsent(value)
             log(.privacyUpdated(setting: "consent", value: value))
         }

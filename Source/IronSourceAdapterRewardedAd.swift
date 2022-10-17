@@ -98,8 +98,7 @@ extension IronSourceAdapterRewardedAd: CHBHIronSourceWrapperRewardedDelegate {
     
     func rewardedVideoAdRewarded(_ instanceId: String) {
         // Report reward
-        let reward = Reward(amount: nil, label: nil)
-        log(.didReward(reward))
-        delegate?.didReward(self, details: [:], reward: reward) ?? log(.delegateUnavailable)
+        log(.didReward)
+        delegate?.didReward(self, details: [:]) ?? log(.delegateUnavailable)
     }
 }
