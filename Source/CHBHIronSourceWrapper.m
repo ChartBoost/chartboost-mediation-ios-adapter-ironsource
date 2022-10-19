@@ -26,11 +26,11 @@
     [IronSource initISDemandOnly:appKey adUnits:adUnits];
 }
 
-+ (void)setISDemandOnlyInterstitialDelegate:(id<CHBHIronSourceWrapperDelegate>)delegate {
++ (void)setISDemandOnlyInterstitialDelegate:(id<CHBHIronSourceWrapperInterstitialDelegate>)delegate {
     [IronSource setISDemandOnlyInterstitialDelegate:(id<ISDemandOnlyInterstitialDelegate>)delegate];
 }
 
-+ (void)setISDemandOnlyRewardedVideoDelegate:(id<CHBHIronSourceWrapperDelegate>)delegate {
++ (void)setISDemandOnlyRewardedVideoDelegate:(id<CHBHIronSourceWrapperRewardedDelegate>)delegate {
     [IronSource setISDemandOnlyRewardedVideoDelegate:(id<ISDemandOnlyRewardedVideoDelegate>)delegate];
 }
 
