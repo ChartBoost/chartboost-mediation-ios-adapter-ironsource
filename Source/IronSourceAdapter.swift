@@ -84,7 +84,7 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     /// Indicates the CCPA status both as a boolean and as an IAB US privacy string.
     /// - parameter hasGivenConsent: A boolean indicating if the user has given consent.
     /// - parameter privacyString: An IAB-compliant string indicating the CCPA status.
-    func setCCPAConsent(hasGivenConsent: Bool, privacyString: String?) {
+    func setCCPA(hasGivenConsent: Bool, privacyString: String) {
         // IronSource supports only a boolean value, privacyString is ignored
         let key: String = .ccpaKey
         let value: String = hasGivenConsent ? .yes : .no
@@ -93,10 +93,10 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     }
     
     /// Indicates if the user is subject to COPPA or not.
-    /// - parameter isSubject: `true` if the user is subject, `false` otherwise.
-    func setUserSubjectToCOPPA(_ isSubject: Bool) {
+    /// - parameter isChildDirected: `true` if the user is subject to COPPA, `false` otherwise.
+    func setCOPPA(isChildDirected: Bool) {
         let key: String = .coppaKey
-        let value: String = isSubject ? .yes : .no
+        let value: String = isChildDirected ? .yes : .no
         IronSource.setMetaDataWithKey(key, value: value)
         log(.privacyUpdated(setting: "metaDataWithKey", value: [key: value]))
     }
