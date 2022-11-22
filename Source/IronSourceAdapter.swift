@@ -12,7 +12,7 @@ import HeliumSdk
 typealias IronSource = CHBHIronSourceWrapper
 
 /// The Helium IronSource adapter.
-final class IronSourceAdapter: NSObject, PartnerAdapter {
+final class IronSourceAdapter: PartnerAdapter {
     
     /// The version of the partner SDK.
     let partnerSDKVersion = IronSource.sdkVersion()
@@ -27,9 +27,12 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
     
     /// The human-friendly partner name.
     let partnerDisplayName = "IronSource"
-        
+    
     /// Ad storage managed by Helium SDK.
-    private let storage: PartnerAdapterStorage
+    let storage: PartnerAdapterStorage
+    
+    /// A router that forwards IronSource delegate calls to the corresponding `PartnerAd` instances.
+    private var router: IronSourceAdapterRouter?
     
     /// The designated initializer for the adapter.
     /// Helium SDK will use this constructor to create instances of conforming types.
@@ -54,10 +57,12 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
         // Initialize IronSource
         IronSource.initISDemandOnly(appKey, adUnits: configuration.lineItems ?? [])
         
-        // IronSource provides one delegate for all ads of the same type.
-        // IronSourceAdapter implements these delegate protocols and forwards calls to the corresponding partner ad instances.
-        IronSource.setISDemandOnlyInterstitialDelegate(self)
-        IronSource.setISDemandOnlyRewardedVideoDelegate(self)
+        // IronSource provides one single delegate for all ads of the same type.
+        // IronSourceAdapterRouter implements these delegate protocols and forwards calls to the corresponding partner ad instances.
+        let router = IronSourceAdapterRouter(adapter: self)
+        self.router = router    // keep the router instance alive
+        IronSource.setISDemandOnlyInterstitialDelegate(router)
+        IronSource.setISDemandOnlyRewardedVideoDelegate(router)
         
         log(.setUpSucceded)
         completion(nil)
@@ -118,90 +123,6 @@ final class IronSourceAdapter: NSObject, PartnerAdapter {
         case .banner:
             throw error(.adFormatNotSupported(request))
         }
-    }
-}
-
-// MARK: ISDemandOnlyInterstitialDelegate
-
-extension IronSourceAdapter: CHBHIronSourceWrapperInterstitialDelegate {
-    
-    func interstitialDidLoad(_ instanceId: String) {
-        interstitialAd(for: instanceId)?.interstitialDidLoad(instanceId)
-    }
-    
-    func interstitialDidFailToLoadWithError(_ error: Error, instanceId: String) {
-        interstitialAd(for: instanceId)?.interstitialDidFailToLoadWithError(error, instanceId: instanceId)
-    }
-    
-    func interstitialDidOpen(_ instanceId: String) {
-        interstitialAd(for: instanceId)?.interstitialDidOpen(instanceId)
-    }
-    
-    func interstitialDidFailToShowWithError(_ error: Error, instanceId: String) {
-        interstitialAd(for: instanceId)?.interstitialDidFailToShowWithError(error, instanceId: instanceId)
-    }
-    
-    func interstitialDidClose(_ instanceId: String) {
-        interstitialAd(for: instanceId)?.interstitialDidClose(instanceId)
-    }
-    
-    func didClickInterstitial(_ instanceId: String) {
-        interstitialAd(for: instanceId)?.didClickInterstitial(instanceId)
-    }
-}
-
-// MARK: ISDemandOnlyRewardedVideoDelegate
-
-extension IronSourceAdapter: CHBHIronSourceWrapperRewardedDelegate {
-    
-    func rewardedVideoDidLoad(_ instanceId: String) {
-        rewardedAd(for: instanceId)?.rewardedVideoDidLoad(instanceId)
-    }
-    
-    func rewardedVideoDidFailToLoadWithError(_ error: Error, instanceId: String) {
-        rewardedAd(for: instanceId)?.rewardedVideoDidFailToLoadWithError(error, instanceId: instanceId)
-    }
-    
-    func rewardedVideoDidOpen(_ instanceId: String) {
-        rewardedAd(for: instanceId)?.rewardedVideoDidOpen(instanceId)
-    }
-    
-    func rewardedVideoDidFailToShowWithError(_ error: Error, instanceId: String) {
-        rewardedAd(for: instanceId)?.rewardedVideoDidFailToShowWithError(error, instanceId: instanceId)
-    }
-    
-    func rewardedVideoDidClose(_ instanceId: String) {
-        rewardedAd(for: instanceId)?.rewardedVideoDidClose(instanceId)
-    }
-    
-    func rewardedVideoDidClick(_ instanceId: String) {
-        rewardedAd(for: instanceId)?.rewardedVideoDidClick(instanceId)
-    }
-    
-    func rewardedVideoAdRewarded(_ instanceId: String) {
-        rewardedAd(for: instanceId)?.rewardedVideoAdRewarded(instanceId)
-    }
-}
-
-// MARK: - Delegate Helpers
-
-private extension IronSourceAdapter {
-    
-    /// Fetches a stored ad adapter and logs an error if none is found.
-    func ad(for partnerPlacement: String, functionName: StaticString = #function) -> PartnerAd? {
-        guard let ad = storage.ads.first(where: { $0.request.partnerPlacement == partnerPlacement }) else {
-            log("\(functionName) call ignored with instanceId \(partnerPlacement)")
-            return nil
-        }
-        return ad
-    }
-    
-    func interstitialAd(for partnerPlacement: String, functionName: StaticString = #function) -> IronSourceAdapterInterstitialAd? {
-        ad(for: partnerPlacement, functionName: functionName) as? IronSourceAdapterInterstitialAd
-    }
-    
-    func rewardedAd(for partnerPlacement: String, functionName: StaticString = #function) -> IronSourceAdapterRewardedAd? {
-        ad(for: partnerPlacement, functionName: functionName) as? IronSourceAdapterRewardedAd
     }
 }
 
