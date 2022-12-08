@@ -27,6 +27,12 @@ Pod::Spec.new do |spec|
 
   # Partner network SDK and version that this adapter is certified to work with.
   spec.dependency 'IronSourceSDK', '7.2.1'
+
+  # IronSource SDK currently does not support arm64 simulators.
+  spec.pod_target_xcconfig = { 
+    'OTHER_LDFLAGS' => '-lObjC',
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
+  }
   
   # The partner network SDK is a static framework which requires the static_framework option.
   spec.static_framework = true
