@@ -122,6 +122,8 @@ final class IronSourceAdapter: PartnerAdapter {
             return IronSourceAdapterRewardedAd(adapter: self, request: request, delegate: delegate)
         case .banner:
             throw error(.adFormatNotSupported(request))
+        @unknown default:
+            throw error(.adFormatNotSupported(request))
         }
     }
 }
