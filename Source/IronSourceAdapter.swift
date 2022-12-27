@@ -49,7 +49,7 @@ final class IronSourceAdapter: PartnerAdapter {
         log(.setUpStarted)
         // Get credentials, fail early if they are unavailable
         guard let appKey = configuration.appKey else {
-            let error = error(.missingSetUpParameter(key: .appKeyKey))
+            let error = error(.initializationFailureInvalidCredentials, description: "Missing \(String.appKeyKey)")
             log(.setUpFailed(error))
             completion(error)
             return
@@ -121,9 +121,9 @@ final class IronSourceAdapter: PartnerAdapter {
         case .rewarded:
             return IronSourceAdapterRewardedAd(adapter: self, request: request, delegate: delegate)
         case .banner:
-            throw error(.adFormatNotSupported(request))
+            throw error(.loadFailureUnsupportedAdFormat)
         @unknown default:
-            throw error(.adFormatNotSupported(request))
+            throw error(.loadFailureUnsupportedAdFormat)
         }
     }
 }
