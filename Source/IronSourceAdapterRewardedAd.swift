@@ -38,7 +38,7 @@ final class IronSourceAdapterRewardedAd: IronSourceAdapterAd, PartnerAd {
         
         // If ad not loaded fail immediately
         guard IronSource.hasISDemandOnlyRewardedVideo(request.partnerPlacement) else {
-            let error = error(.noAdReadyToShow)
+            let error = error(.showFailureAdNotReady)
             log(.showFailed(error))
             completion(.failure(error))
             return
@@ -63,7 +63,7 @@ extension IronSourceAdapterRewardedAd: CHBHIronSourceWrapperRewardedDelegate {
     
     func rewardedVideoDidFailToLoadWithError(_ partnerError: Error, instanceId: String) {
         // Report load failure
-        let error = error(.loadFailure, error: partnerError)
+        let error = error(.loadFailureUnknown, error: partnerError)
         log(.loadFailed(error))
         loadCompletion?(.failure(error)) ?? log(.loadResultIgnored)
         loadCompletion = nil
@@ -78,7 +78,7 @@ extension IronSourceAdapterRewardedAd: CHBHIronSourceWrapperRewardedDelegate {
     
     func rewardedVideoDidFailToShowWithError(_ partnerError: Error, instanceId: String) {
         // Report show failure
-        let error = error(.showFailure, error: partnerError)
+        let error = error(.showFailureUnknown, error: partnerError)
         log(.showFailed(error))
         showCompletion?(.failure(error)) ?? log(.showResultIgnored)
         showCompletion = nil
