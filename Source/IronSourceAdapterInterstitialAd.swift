@@ -63,9 +63,8 @@ extension IronSourceAdapterInterstitialAd: CHBHIronSourceWrapperInterstitialDele
     
     func interstitialDidFailToLoadWithError(_ partnerError: Error, instanceId: String) {
         // Report load failure
-        let error = error(.loadFailureUnknown, error: partnerError)
-        log(.loadFailed(error))
-        loadCompletion?(.failure(error)) ?? log(.loadResultIgnored)
+        log(.loadFailed(partnerError))
+        loadCompletion?(.failure(partnerError)) ?? log(.loadResultIgnored)
         loadCompletion = nil
     }
     
@@ -78,9 +77,8 @@ extension IronSourceAdapterInterstitialAd: CHBHIronSourceWrapperInterstitialDele
     
     func interstitialDidFailToShowWithError(_ partnerError: Error, instanceId: String) {
         // Report show failure
-        let error = error(.showFailureUnknown, error: partnerError)
-        log(.showFailed(error))
-        showCompletion?(.failure(error)) ?? log(.showResultIgnored)
+        log(.showFailed(partnerError))
+        showCompletion?(.failure(partnerError)) ?? log(.showResultIgnored)
         showCompletion = nil
     }
     
