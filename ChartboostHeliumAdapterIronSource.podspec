@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name        = 'ChartboostHeliumAdapterIronSource'
-  spec.version     = '4.7.2.1.0.0'
+  spec.version     = '4.7.2.5.1.0'
   spec.license     = { :type => 'MIT', :file => 'LICENSE.md' }
   spec.homepage    = 'https://github.com/ChartBoost/helium-ios-adapter-ironsource'
   spec.authors     = { 'Chartboost' => 'https://www.chartboost.com/' }
@@ -26,7 +26,7 @@ Pod::Spec.new do |spec|
   spec.dependency 'ChartboostHelium', '~> 4.0'
 
   # Partner network SDK and version that this adapter is certified to work with.
-  spec.dependency 'IronSourceSDK', '7.2.1'
+  spec.dependency 'IronSourceSDK', '7.2.5.1'
 
   # IronSource SDK currently does not support arm64 simulators.
   spec.pod_target_xcconfig = { 
