@@ -9,7 +9,7 @@ Pod::Spec.new do |spec|
 
   # Source
   spec.module_name  = 'HeliumAdapterIronSource'
-  spec.source       = { :git => 'https://github.com/ChartBoost/helium-ios-adapter-ironsource.git', :tag => '#{spec.version}' }
+  spec.source       = { :git => 'https://github.com/ChartBoost/helium-ios-adapter-ironsource.git', :tag => spec.version }
   spec.source_files = 'Source/**/*.{swift,h,m}'
   
   # Public header to expose this Obj-C IronSource wrapper to Swift.
