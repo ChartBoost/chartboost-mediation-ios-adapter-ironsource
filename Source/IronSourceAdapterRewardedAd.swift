@@ -10,8 +10,8 @@
 //  Created by Daniel Barros on 9/22/22.
 //
 
+import ChartboostMediationSDK
 import Foundation
-import HeliumSdk
 
 /// Helium IronSource adapter rewarded ad.
 final class IronSourceAdapterRewardedAd: IronSourceAdapterAd, PartnerAd {
