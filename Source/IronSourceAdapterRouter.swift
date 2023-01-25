@@ -10,8 +10,8 @@
 //  Created by Daniel Barros on 11/21/22.
 //
 
+import ChartboostMediationSDK
 import Foundation
-import HeliumSdk
 
 /// Routes IronSource singleton delegate calls to the corresponding `PartnerAd` instances.
 class IronSourceAdapterRouter: NSObject {

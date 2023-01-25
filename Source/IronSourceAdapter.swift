@@ -10,8 +10,8 @@
 //  Created by Daniel Barros on 9/22/22.
 //
 
+import ChartboostMediationSDK
 import Foundation
-import HeliumSdk
 
 /// An IronSource wrapper compatible with Swift.
 typealias IronSource = CHBHIronSourceWrapper
