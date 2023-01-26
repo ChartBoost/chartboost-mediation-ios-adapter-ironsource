@@ -1,6 +1,6 @@
 # Chartboost Mediation IronSource Adapter
 
-The Chartboost Mediation IronSource adapter mediates the IronSource SDK into the Chartboost Mediation SDK.
+The Chartboost Mediation IronSource adapter mediates IronSource via the Chartboost Mediation SDK.
 
 ## Minimum Requirements
 
