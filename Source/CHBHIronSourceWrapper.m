@@ -5,7 +5,7 @@
 
 //
 //  CHBHIronSourceWrapper.m
-//  HeliumAdapterIronSource
+//  ChartboostMediationAdapterIronSource
 //
 //  Created by Daniel Barros on 9/30/22.
 //

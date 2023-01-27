@@ -5,7 +5,7 @@
 
 //
 //  IronSourceAdapterRouter.swift
-//  HeliumAdapterIronSource
+//  ChartboostMediationAdapterIronSource
 //
 //  Created by Daniel Barros on 11/21/22.
 //

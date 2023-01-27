@@ -5,7 +5,7 @@
 
 //
 //  CHBHIronSourceWrapper.h
-//  HeliumAdapterIronSource
+//  ChartboostMediationAdapterIronSource
 //
 //  Created by Daniel Barros on 9/30/22.
 //
@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - CHBHIronSourceWrapper
 
 /**
- @abstract A wrapper that allows Helium IronSource adapters written in Swift to communicate with the IronSource SDK.
+ @abstract A wrapper that allows Chartboost Mediation IronSource adapters written in Swift to communicate with the IronSource SDK.
  @discussion IronSource SDK is not packaged as a module, which means it cannot be used directly within Swift code.
  Not being a module means IronSource headers cannot be exposed to Swift by importing them in the umbrella header of the adapters framework. Thus the existing solution, which consists in not trying to expose IronSource SDK to Swift, and
  instead use an Obj-C layer to communicate with it.

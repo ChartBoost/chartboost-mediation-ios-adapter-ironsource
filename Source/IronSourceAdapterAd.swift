@@ -5,7 +5,7 @@
 
 //
 //  IronSourceAdapterAd.swift
-//  HeliumAdapterIronSource
+//  ChartboostMediationAdapterIronSource
 //
 //  Created by Daniel Barros on 9/22/22.
 //
@@ -13,7 +13,7 @@
 import ChartboostMediationSDK
 import Foundation
 
-/// Base class for Helium IronSource adapter ads.
+/// Base class for Chartboost Mediation IronSource adapter ads.
 class IronSourceAdapterAd: NSObject {
     
     /// The partner adapter that created this ad.

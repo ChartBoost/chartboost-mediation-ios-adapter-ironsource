@@ -5,7 +5,7 @@
 
 //
 //  IronSourceAdapterInterstitialAd.swift
-//  HeliumAdapterIronSource
+//  ChartboostMediationAdapterIronSource
 //
 //  Created by Daniel Barros on 9/22/22.
 //
@@ -13,7 +13,7 @@
 import ChartboostMediationSDK
 import Foundation
 
-/// Helium IronSource adapter interstitial ad.
+/// Chartboost Mediation IronSource adapter interstitial ad.
 final class IronSourceAdapterInterstitialAd: IronSourceAdapterAd, PartnerAd {
     
     /// Loads an ad.

@@ -5,7 +5,7 @@
 
 //
 //  IronSourceAdapterRewardedAd.swift
-//  HeliumAdapterIronSource
+//  ChartboostMediationAdapterIronSource
 //
 //  Created by Daniel Barros on 9/22/22.
 //
@@ -13,7 +13,7 @@
 import ChartboostMediationSDK
 import Foundation
 
-/// Helium IronSource adapter rewarded ad.
+/// Chartboost Mediation IronSource adapter rewarded ad.
 final class IronSourceAdapterRewardedAd: IronSourceAdapterAd, PartnerAd {
     
     /// Loads an ad.
