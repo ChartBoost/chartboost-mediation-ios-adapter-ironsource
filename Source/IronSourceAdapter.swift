@@ -78,6 +78,7 @@ final class IronSourceAdapter: PartnerAdapter {
     /// - parameter applies: `true` if GDPR applies, `false` if not, `nil` if the publisher has not provided this information.
     /// - parameter status: One of the `GDPRConsentStatus` values depending on the user's preference.
     func setGDPR(applies: Bool?, status: GDPRConsentStatus) {
+        // See https://developers.is.com/ironsource-mobile/ios/regulation-advanced-settings/#step-1
         if applies == true {
             let value = status == .granted
             IronSource.setConsent(value)
@@ -89,9 +90,11 @@ final class IronSourceAdapter: PartnerAdapter {
     /// - parameter hasGivenConsent: A boolean indicating if the user has given consent.
     /// - parameter privacyString: An IAB-compliant string indicating the CCPA status.
     func setCCPA(hasGivenConsent: Bool, privacyString: String) {
+        // See https://developers.is.com/ironsource-mobile/ios/regulation-advanced-settings/#step-2
         // IronSource supports only a boolean value, privacyString is ignored
-        let key: String = .ccpaKey
-        let value: String = hasGivenConsent ? .yes : .no
+        // Note the value is flipped to account for the opposite meanings of "giving consent" and "do not sell"
+        let key: String = .doNotSellKey
+        let value: String = hasGivenConsent ? .no : .yes
         IronSource.setMetaDataWithKey(key, value: value)
         log(.privacyUpdated(setting: "metaDataWithKey", value: [key: value]))
     }
@@ -99,6 +102,7 @@ final class IronSourceAdapter: PartnerAdapter {
     /// Indicates if the user is subject to COPPA or not.
     /// - parameter isChildDirected: `true` if the user is subject to COPPA, `false` otherwise.
     func setCOPPA(isChildDirected: Bool) {
+        // See https://developers.is.com/ironsource-mobile/ios/regulation-advanced-settings/#step-3
         let key: String = .coppaKey
         let value: String = isChildDirected ? .yes : .no
         IronSource.setMetaDataWithKey(key, value: value)
@@ -138,7 +142,7 @@ private extension String {
     /// IronSource line items credentials key
     static let lineItemsKey = "line_items"
     /// IronSource CCPA metadata key
-    static let ccpaKey = "do_not_sell"
+    static let doNotSellKey = "do_not_sell"
     /// IronSource COPPA metadata key
     static let coppaKey = "is_child_directed"
     /// IronSource affirmative consent metadata value
