@@ -3,13 +3,6 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-//
-//  CHBHIronSourceWrapper.h
-//  ChartboostMediationAdapterIronSource
-//
-//  Created by Daniel Barros on 9/30/22.
-//
-
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
