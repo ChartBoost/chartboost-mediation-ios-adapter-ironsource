@@ -5,6 +5,7 @@
 
 import ChartboostMediationSDK
 import Foundation
+import IronSource
 
 /// Chartboost Mediation IronSource adapter rewarded ad.
 final class IronSourceAdapterRewardedAd: IronSourceAdapterAd, PartnerAd {
@@ -50,7 +51,7 @@ final class IronSourceAdapterRewardedAd: IronSourceAdapterAd, PartnerAd {
 
 // MARK: ISDemandOnlyRewardedVideoDelegate
 
-extension IronSourceAdapterRewardedAd: CHBHIronSourceWrapperRewardedDelegate {
+extension IronSourceAdapterRewardedAd: ISDemandOnlyRewardedVideoDelegate {
     
     func rewardedVideoDidLoad(_ instanceId: String) {
         // Report load success

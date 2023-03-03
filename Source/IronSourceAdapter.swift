@@ -5,9 +5,7 @@
 
 import ChartboostMediationSDK
 import Foundation
-
-/// An IronSource wrapper compatible with Swift.
-typealias IronSource = CHBHIronSourceWrapper
+import IronSource
 
 /// The Chartboost Mediation IronSource adapter.
 final class IronSourceAdapter: PartnerAdapter {

@@ -5,6 +5,7 @@
 
 import ChartboostMediationSDK
 import Foundation
+import IronSource
 
 /// Chartboost Mediation IronSource adapter interstitial ad.
 final class IronSourceAdapterInterstitialAd: IronSourceAdapterAd, PartnerAd {
@@ -50,7 +51,7 @@ final class IronSourceAdapterInterstitialAd: IronSourceAdapterAd, PartnerAd {
 
 // MARK: ISDemandOnlyInterstitialDelegate
 
-extension IronSourceAdapterInterstitialAd: CHBHIronSourceWrapperInterstitialDelegate {
+extension IronSourceAdapterInterstitialAd: ISDemandOnlyInterstitialDelegate {
     
     func interstitialDidLoad(_ instanceId: String) {
         // Report load success

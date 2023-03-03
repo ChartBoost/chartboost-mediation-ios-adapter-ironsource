@@ -11,9 +11,6 @@ Pod::Spec.new do |spec|
   spec.module_name  = 'ChartboostMediationAdapterIronSource'
   spec.source       = { :git => 'https://github.com/ChartBoost/chartboost-mediation-ios-adapter-ironsource.git', :tag => spec.version }
   spec.source_files = 'Source/**/*.{swift,h,m}'
-  
-  # Public header to expose this Obj-C IronSource wrapper to Swift.
-  spec.public_header_files = 'Source/CHBHIronSourceWrapper.h'
 
   # Minimum supported versions
   spec.swift_version         = '5.0'
