@@ -29,7 +29,7 @@ jobs:
 
       # Push the podspec.
       - name: Push Podspec
-        run: pod trunk push --verbose --skip-import-validation
+        run: pod trunk push --verbose --skip-import-validation --allow-warnings
 
       # Create GitHub release.
       - name: Create Release
