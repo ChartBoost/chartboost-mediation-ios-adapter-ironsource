@@ -5,9 +5,7 @@
 
 import ChartboostMediationSDK
 import Foundation
-
-/// An IronSource wrapper compatible with Swift.
-typealias IronSource = CHBHIronSourceWrapper
+import IronSource
 
 /// The Chartboost Mediation IronSource adapter.
 final class IronSourceAdapter: PartnerAdapter {
@@ -18,7 +16,7 @@ final class IronSourceAdapter: PartnerAdapter {
     /// The version of the adapter.
     /// It should have either 5 or 6 digits separated by periods, where the first digit is Chartboost Mediation SDK's major version, the last digit is the adapter's build version, and intermediate digits are the partner SDK's version.
     /// Format: `<Chartboost Mediation major version>.<Partner major version>.<Partner minor version>.<Partner patch version>.<Partner build version>.<Adapter build version>` where `.<Partner build version>` is optional.
-    let adapterVersion = "4.7.2.5.1.0"
+    let adapterVersion = "4.7.2.6.0.0"
     
     /// The partner's unique identifier.
     let partnerIdentifier = "ironsource"

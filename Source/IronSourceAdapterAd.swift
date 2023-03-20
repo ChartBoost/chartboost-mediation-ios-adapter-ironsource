@@ -5,6 +5,7 @@
 
 import ChartboostMediationSDK
 import Foundation
+import IronSource
 
 /// Base class for Chartboost Mediation IronSource adapter ads.
 class IronSourceAdapterAd: NSObject {

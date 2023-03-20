@@ -5,6 +5,7 @@
 
 import ChartboostMediationSDK
 import Foundation
+import IronSource
 
 /// Routes IronSource singleton delegate calls to the corresponding `PartnerAd` instances.
 class IronSourceAdapterRouter: NSObject {
@@ -19,7 +20,7 @@ class IronSourceAdapterRouter: NSObject {
 
 // MARK: ISDemandOnlyInterstitialDelegate
 
-extension IronSourceAdapterRouter: CHBHIronSourceWrapperInterstitialDelegate {
+extension IronSourceAdapterRouter: ISDemandOnlyInterstitialDelegate {
     
     func interstitialDidLoad(_ instanceId: String) {
         interstitialAd(for: instanceId)?.interstitialDidLoad(instanceId)
@@ -48,7 +49,7 @@ extension IronSourceAdapterRouter: CHBHIronSourceWrapperInterstitialDelegate {
 
 // MARK: ISDemandOnlyRewardedVideoDelegate
 
-extension IronSourceAdapterRouter: CHBHIronSourceWrapperRewardedDelegate {
+extension IronSourceAdapterRouter: ISDemandOnlyRewardedVideoDelegate {
     
     func rewardedVideoDidLoad(_ instanceId: String) {
         rewardedAd(for: instanceId)?.rewardedVideoDidLoad(instanceId)
