@@ -115,6 +115,12 @@ final class IronSourceAdapter: PartnerAdapter {
     /// - parameter request: Information about the ad load request.
     /// - parameter delegate: The delegate that will receive ad life-cycle notifications.
     func makeAd(request: PartnerAdLoadRequest, delegate: PartnerAdDelegate) throws -> PartnerAd {
+        // Prevent multiple loads for the same partner placement, since the partner SDK cannot handle them.
+        guard !storage.ads.contains(where: { $0.request.partnerPlacement == request.partnerPlacement }) else {
+            log("Failed to load ad for already loading placement \(request.partnerPlacement)")
+            throw error(.loadFailureLoadInProgress)
+        }
+
         switch request.format {
         case .interstitial:
             return IronSourceAdapterInterstitialAd(adapter: self, request: request, delegate: delegate)

@@ -4,6 +4,7 @@ Note the first digit of every adapter version corresponds to the major version o
 Adapters are compatible with any Chartboost Mediation SDK version within that major version.
 
 ### 4.7.3.0.0.0
+- Prevent multiple fullscreen loads for the same placement from happening concurrently.
 - This version of the adapters has been certified with IronSourceSDK 7.3.0.0.
 
 ### 4.7.2.7.0.0
