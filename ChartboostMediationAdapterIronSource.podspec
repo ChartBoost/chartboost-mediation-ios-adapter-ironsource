@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name        = 'ChartboostMediationAdapterIronSource'
-  spec.version     = '4.7.2.6.0.0'
+  spec.version     = '4.7.2.7.0.0'
   spec.license     = { :type => 'MIT', :file => 'LICENSE.md' }
   spec.homepage    = 'https://github.com/ChartBoost/chartboost-mediation-ios-adapter-ironsource'
   spec.authors     = { 'Chartboost' => 'https://www.chartboost.com/' }
@@ -23,7 +23,7 @@ Pod::Spec.new do |spec|
   spec.dependency 'ChartboostMediationSDK', '~> 4.0'
 
   # Partner network SDK and version that this adapter is certified to work with.
-  spec.dependency 'IronSourceSDK', '~> 7.2.6.0'
+  spec.dependency 'IronSourceSDK', '~> 7.2.7.0'
 
   # IronSource SDK does not support i386 simulators.
   spec.pod_target_xcconfig = { 
