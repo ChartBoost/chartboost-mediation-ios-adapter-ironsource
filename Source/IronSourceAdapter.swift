@@ -16,7 +16,7 @@ final class IronSourceAdapter: PartnerAdapter {
     /// The version of the adapter.
     /// It should have either 5 or 6 digits separated by periods, where the first digit is Chartboost Mediation SDK's major version, the last digit is the adapter's build version, and intermediate digits are the partner SDK's version.
     /// Format: `<Chartboost Mediation major version>.<Partner major version>.<Partner minor version>.<Partner patch version>.<Partner build version>.<Adapter build version>` where `.<Partner build version>` is optional.
-    let adapterVersion = "4.7.2.7.0.0"
+    let adapterVersion = "4.7.3.0.0.0"
     
     /// The partner's unique identifier.
     let partnerIdentifier = "ironsource"
@@ -115,6 +115,12 @@ final class IronSourceAdapter: PartnerAdapter {
     /// - parameter request: Information about the ad load request.
     /// - parameter delegate: The delegate that will receive ad life-cycle notifications.
     func makeAd(request: PartnerAdLoadRequest, delegate: PartnerAdDelegate) throws -> PartnerAd {
+        // Prevent multiple loads for the same partner placement, since the partner SDK cannot handle them.
+        guard !storage.ads.contains(where: { $0.request.partnerPlacement == request.partnerPlacement }) else {
+            log("Failed to load ad for already loading placement \(request.partnerPlacement)")
+            throw error(.loadFailureLoadInProgress)
+        }
+
         switch request.format {
         case .interstitial:
             return IronSourceAdapterInterstitialAd(adapter: self, request: request, delegate: delegate)
