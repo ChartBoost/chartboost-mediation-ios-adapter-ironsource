@@ -25,7 +25,15 @@ final class IronSourceAdapterInterstitialAd: IronSourceAdapterAd, PartnerAd {
         
         // Start loading
         loadCompletion = completion
-        IronSource.loadISDemandOnlyInterstitial(request.partnerPlacement)
+        if let adm = request.adm {
+            // In IronSource.h, the signature for this method is:
+            // `(void)loadISDemandOnlyInterstitialWithAdm:(NSString *)instanceId adm:(NSString *)adm;`
+            // So it appears that labeling the first parameter "withAdm" is a Objective C -> Swift
+            // translation error and we should actually be passing the instanceId as the first parameter.
+            IronSource.loadISDemandOnlyInterstitial(withAdm: request.partnerPlacement, adm: adm)
+        } else {
+            IronSource.loadISDemandOnlyInterstitial(request.partnerPlacement)
+        }
     }
     
     /// Shows a loaded ad.
