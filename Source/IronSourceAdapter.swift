@@ -68,8 +68,8 @@ final class IronSourceAdapter: PartnerAdapter {
     /// - parameter request: Information about the ad load request.
     /// - parameter completion: Closure to be performed with the fetched info.
     func fetchBidderInformation(request: PreBidRequest, completion: @escaping ([String : String]?) -> Void) {
-        // IronSource does not currently provide any bidding token
-        completion(nil)
+        let token = IronSource.getISDemandOnlyBiddingData()
+        completion(["token": token])
     }
     
     /// Indicates if GDPR applies or not and the user's GDPR consent status.
