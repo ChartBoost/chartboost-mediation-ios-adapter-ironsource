@@ -11,6 +11,7 @@ Pod::Spec.new do |spec|
   spec.module_name  = 'ChartboostMediationAdapterIronSource'
   spec.source       = { :git => 'https://github.com/ChartBoost/chartboost-mediation-ios-adapter-ironsource.git', :tag => spec.version }
   spec.source_files = 'Source/**/*.{swift,h,m}'
+  spec.resource_bundles = { 'ChartboostMediationAdapterIronSource' => ['PrivacyInfo.xcprivacy'] }
 
   # Minimum supported versions
   spec.swift_version         = '5.0'
