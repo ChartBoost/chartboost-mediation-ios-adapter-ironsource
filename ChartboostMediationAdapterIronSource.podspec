@@ -24,7 +24,7 @@ Pod::Spec.new do |spec|
   spec.dependency 'ChartboostMediationSDK', '~> 4.0'
 
   # Partner network SDK and version that this adapter is certified to work with.
-  spec.dependency 'IronSourceSDK', '7.7.0.0'
+  spec.dependency 'IronSourceSDK', '~> 7.7.0.0'
 
   # IronSource SDK does not support i386 simulators.
   spec.pod_target_xcconfig = { 
