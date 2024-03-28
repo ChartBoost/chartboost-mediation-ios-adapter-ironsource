@@ -52,21 +52,20 @@ final class IronSourceAdapter: PartnerAdapter {
         }
 
         // Initialize IronSource. Must be performed on the main queue.
-        dispatchPrecondition(condition: .notOnQueue(.main)) // If on the main queue, there will be deadlock. Make sure we are not on the main queue.
-        DispatchQueue.main.sync {
+        DispatchQueue.main.async {
             IronSource.initISDemandOnly(appKey, adUnits: configuration.lineItems ?? [])
+
+            let router = IronSourceAdapterRouter(adapter: self)
+            self.router = router    // keep the router instance alive
+
+            // IronSource provides one single delegate for all ads of the same type.
+            // IronSourceAdapterRouter implements these delegate protocols and forwards calls to the corresponding partner ad instances.
+            IronSource.setISDemandOnlyInterstitialDelegate(router)
+            IronSource.setISDemandOnlyRewardedVideoDelegate(router)
+
+            self.log(.setUpSucceded)
+            completion(nil)
         }
-
-        let router = IronSourceAdapterRouter(adapter: self)
-        self.router = router    // keep the router instance alive
-
-        // IronSource provides one single delegate for all ads of the same type.
-        // IronSourceAdapterRouter implements these delegate protocols and forwards calls to the corresponding partner ad instances.
-        IronSource.setISDemandOnlyInterstitialDelegate(router)
-        IronSource.setISDemandOnlyRewardedVideoDelegate(router)
-
-        log(.setUpSucceded)
-        completion(nil)
     }
     
     /// Fetches bidding tokens needed for the partner to participate in an auction.
