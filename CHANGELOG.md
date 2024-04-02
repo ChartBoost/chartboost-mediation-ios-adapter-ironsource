@@ -6,6 +6,9 @@ Adapters are compatible with any Chartboost Mediation SDK version within that ma
 ### 4.7.9.0.0.0
 - This version of the adapter has been certified with IronSourceSDK 7.9.0.0.
 
+### 4.7.8.0.0.1
+- Initialization of the SDK on the main queue.
+
 ### 4.7.8.0.0.0
 - This version of the adapter has been certified with IronSourceSDK 7.8.0.0.
 
