@@ -16,8 +16,8 @@ final class IronSourceAdapter: PartnerAdapter {
     /// The version of the adapter.
     /// It should have either 5 or 6 digits separated by periods, where the first digit is Chartboost Mediation SDK's major version, the last digit is the adapter's build version, and intermediate digits are the partner SDK's version.
     /// Format: `<Chartboost Mediation major version>.<Partner major version>.<Partner minor version>.<Partner patch version>.<Partner build version>.<Adapter build version>` where `.<Partner build version>` is optional.
-    let adapterVersion = "4.7.8.0.0.0"
-    
+    let adapterVersion = "4.7.8.0.0.1"
+
     /// The partner's unique identifier.
     let partnerIdentifier = "ironsource"
     
@@ -50,18 +50,22 @@ final class IronSourceAdapter: PartnerAdapter {
             completion(error)
             return
         }
-        // Initialize IronSource
-        IronSource.initISDemandOnly(appKey, adUnits: configuration.lineItems ?? [])
-        
-        // IronSource provides one single delegate for all ads of the same type.
-        // IronSourceAdapterRouter implements these delegate protocols and forwards calls to the corresponding partner ad instances.
-        let router = IronSourceAdapterRouter(adapter: self)
-        self.router = router    // keep the router instance alive
-        IronSource.setISDemandOnlyInterstitialDelegate(router)
-        IronSource.setISDemandOnlyRewardedVideoDelegate(router)
-        
-        log(.setUpSucceded)
-        completion(nil)
+
+        // Initialize IronSource. Must be performed on the main queue.
+        DispatchQueue.main.async {
+            IronSource.initISDemandOnly(appKey, adUnits: configuration.lineItems ?? [])
+
+            let router = IronSourceAdapterRouter(adapter: self)
+            self.router = router    // keep the router instance alive
+
+            // IronSource provides one single delegate for all ads of the same type.
+            // IronSourceAdapterRouter implements these delegate protocols and forwards calls to the corresponding partner ad instances.
+            IronSource.setISDemandOnlyInterstitialDelegate(router)
+            IronSource.setISDemandOnlyRewardedVideoDelegate(router)
+
+            self.log(.setUpSucceded)
+            completion(nil)
+        }
     }
     
     /// Fetches bidding tokens needed for the partner to participate in an auction.
