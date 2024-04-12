@@ -19,7 +19,7 @@ final class IronSourceAdapter: PartnerAdapter {
     let adapterVersion = "4.7.9.1.0.0"
     
     /// The partner's unique identifier.
-    let partnerIdentifier = "ironsource"
+    let partnerID = "ironsource"
     
     /// The human-friendly partner name.
     let partnerDisplayName = "IronSource"
@@ -41,13 +41,13 @@ final class IronSourceAdapter: PartnerAdapter {
     /// Does any setup needed before beginning to load ads.
     /// - parameter configuration: Configuration data for the adapter to set up.
     /// - parameter completion: Closure to be performed by the adapter when it's done setting up. It should include an error indicating the cause for failure or `nil` if the operation finished successfully.
-    func setUp(with configuration: PartnerConfiguration, completion: @escaping (Error?) -> Void) {
+    func setUp(with configuration: PartnerConfiguration, completion: @escaping (Result<PartnerDetails, Error>) -> Void) {
         log(.setUpStarted)
         // Get credentials, fail early if they are unavailable
         guard let appKey = configuration.appKey else {
             let error = error(.initializationFailureInvalidCredentials, description: "Missing \(String.appKeyKey)")
             log(.setUpFailed(error))
-            completion(error)
+            completion(.failure(error))
             return
         }
 
@@ -64,16 +64,17 @@ final class IronSourceAdapter: PartnerAdapter {
             IronSource.setISDemandOnlyRewardedVideoDelegate(router)
 
             self.log(.setUpSucceded)
-            completion(nil)
+            completion(.success([:]))
         }
     }
     
     /// Fetches bidding tokens needed for the partner to participate in an auction.
     /// - parameter request: Information about the ad load request.
     /// - parameter completion: Closure to be performed with the fetched info.
-    func fetchBidderInformation(request: PreBidRequest, completion: @escaping ([String : String]?) -> Void) {
+    func fetchBidderInformation(request: PartnerAdPreBidRequest, completion: @escaping (Result<[String : String], Error>) -> Void) {
         // IronSource does not currently provide any bidding token
-        completion(nil)
+        log(.fetchBidderInfoNotSupported)
+        completion(.success([:]))
     }
     
     /// Indicates if GDPR applies or not and the user's GDPR consent status.
@@ -126,12 +127,10 @@ final class IronSourceAdapter: PartnerAdapter {
         }
 
         switch request.format {
-        case .interstitial:
+        case PartnerAdFormats.interstitial:
             return IronSourceAdapterInterstitialAd(adapter: self, request: request, delegate: delegate)
-        case .rewarded:
+        case PartnerAdFormats.rewarded:
             return IronSourceAdapterRewardedAd(adapter: self, request: request, delegate: delegate)
-        case .banner:
-            throw error(.loadFailureUnsupportedAdFormat)
         default:
             throw error(.loadFailureUnsupportedAdFormat)
         }
