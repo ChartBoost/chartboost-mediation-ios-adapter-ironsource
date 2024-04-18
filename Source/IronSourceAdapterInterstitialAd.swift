@@ -8,7 +8,7 @@ import Foundation
 import IronSource
 
 /// Chartboost Mediation IronSource adapter interstitial ad.
-final class IronSourceAdapterInterstitialAd: IronSourceAdapterAd, PartnerAd {
+final class IronSourceAdapterInterstitialAd: IronSourceAdapterAd, PartnerFullscreenAd {
     
     /// Loads an ad.
     /// - parameter viewController: The view controller on which the ad will be presented on. Needed on load for some banners.
