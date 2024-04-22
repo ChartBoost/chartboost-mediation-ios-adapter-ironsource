@@ -17,20 +17,14 @@ class IronSourceAdapterAd: NSObject {
     var details: PartnerDetails = [:]
 
     /// The ad load request associated to the ad.
-    /// It should be the one provided on `PartnerAdapter.makeAd(request:delegate:)`.
+    /// It should be the one provided on ``PartnerAdapter/makeBannerAd(request:delegate:)``
+    /// or ``PartnerAdapter/makeFullscreenAd(request:delegate:)``.
     let request: PartnerAdLoadRequest
     
     /// The partner ad delegate to send ad life-cycle events to.
-    /// It should be the one provided on `PartnerAdapter.makeAd(request:delegate:)`.
+    /// It should be the one provided on ``PartnerAdapter/makeBannerAd(request:delegate:)``
+    /// or ``PartnerAdapter/makeFullscreenAd(request:delegate:)``.
     weak var delegate: PartnerAdDelegate?
-    
-    /// The partner ad view to display inline. E.g. a banner view.
-    /// Should be nil for full-screen ads.
-    var inlineView: UIView? { nil }
-
-    /// The loaded partner ad banner size.
-    /// Should be `nil` for full-screen ads.
-    var bannerSize: PartnerBannerSize? { nil }
 
     /// The completion for the ongoing load operation.
     var loadCompletion: ((Result<PartnerDetails, Error>) -> Void)?
