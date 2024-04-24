@@ -51,6 +51,10 @@ final class IronSourceAdapter: PartnerAdapter {
             return
         }
 
+        // Apply initial consents
+        setConsents(configuration.consents, modifiedKeys: Set(configuration.consents.keys))
+        setIsUserUnderage(configuration.isUserUnderage)
+
         // Initialize IronSource. Must be performed on the main queue.
         DispatchQueue.main.async {
             IronSource.initISDemandOnly(appKey, adUnits: configuration.lineItems ?? [])
