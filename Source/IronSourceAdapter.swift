@@ -59,6 +59,10 @@ final class IronSourceAdapter: PartnerAdapter {
             return
         }
 
+        // Apply initial consents
+        setConsents(configuration.consents, modifiedKeys: Set(configuration.consents.keys))
+        setIsUserUnderage(configuration.isUserUnderage)
+
         // Initialize IronSource. Must be performed on the main queue.
         DispatchQueue.main.async {
             IronSource.initISDemandOnly(appKey, adUnits: configuration.lineItems ?? [])
@@ -85,37 +89,43 @@ final class IronSourceAdapter: PartnerAdapter {
         completion(.success([:]))
     }
     
-    /// Indicates if GDPR applies or not and the user's GDPR consent status.
-    /// - parameter applies: `true` if GDPR applies, `false` if not, `nil` if the publisher has not provided this information.
-    /// - parameter status: One of the `GDPRConsentStatus` values depending on the user's preference.
-    func setGDPR(applies: Bool?, status: GDPRConsentStatus) {
+    /// Indicates that the user consent has changed.
+    /// - parameter consents: The new consents value, including both modified and unmodified consents.
+    /// - parameter modifiedKeys: A set containing all the keys that changed.
+    func setConsents(_ consents: [ConsentKey: ConsentValue], modifiedKeys: Set<ConsentKey>) {
         // See https://developers.is.com/ironsource-mobile/ios/regulation-advanced-settings/#step-1
-        if applies == true {
-            let value = status == .granted
-            IronSource.setConsent(value)
-            log(.privacyUpdated(setting: "consent", value: value))
+        if modifiedKeys.contains(partnerID) || modifiedKeys.contains(ConsentKeys.gdprConsentGiven) {
+            let consent = consents[partnerID] ?? consents[ConsentKeys.gdprConsentGiven]
+            switch consent {
+            case ConsentValues.granted:
+                IronSource.setConsent(true)
+                log(.privacyUpdated(setting: "consent", value: true))
+            case ConsentValues.denied:
+                IronSource.setConsent(false)
+                log(.privacyUpdated(setting: "consent", value: false))
+            default:
+                break   // do nothing
+            }
         }
-    }
-    
-    /// Indicates the CCPA status both as a boolean and as an IAB US privacy string.
-    /// - parameter hasGivenConsent: A boolean indicating if the user has given consent.
-    /// - parameter privacyString: An IAB-compliant string indicating the CCPA status.
-    func setCCPA(hasGivenConsent: Bool, privacyString: String) {
+
         // See https://developers.is.com/ironsource-mobile/ios/regulation-advanced-settings/#step-2
         // IronSource supports only a boolean value, privacyString is ignored
         // Note the value is flipped to account for the opposite meanings of "giving consent" and "do not sell"
-        let key: String = .doNotSellKey
-        let value: String = hasGivenConsent ? .no : .yes
-        IronSource.setMetaDataWithKey(key, value: value)
-        log(.privacyUpdated(setting: "metaDataWithKey", value: [key: value]))
+        if modifiedKeys.contains(ConsentKeys.ccpaOptIn) {
+            let hasGivenConsent = consents[ConsentKeys.ccpaOptIn] == ConsentValues.granted
+            let key: String = .doNotSellKey
+            let value: String = hasGivenConsent ? .no : .yes
+            IronSource.setMetaDataWithKey(key, value: value)
+            log(.privacyUpdated(setting: "metaDataWithKey", value: [key: value]))
+        }
     }
-    
-    /// Indicates if the user is subject to COPPA or not.
-    /// - parameter isChildDirected: `true` if the user is subject to COPPA, `false` otherwise.
-    func setCOPPA(isChildDirected: Bool) {
+
+    /// Indicates that the user is underage signal has changed.
+    /// - parameter isUserUnderage: `true` if the user is underage as determined by the publisher, `false` otherwise.
+    func setIsUserUnderage(_ isUserUnderage: Bool) {
         // See https://developers.is.com/ironsource-mobile/ios/regulation-advanced-settings/#step-3
         let key: String = .coppaKey
-        let value: String = isChildDirected ? .yes : .no
+        let value: String = isUserUnderage ? .yes : .no
         IronSource.setMetaDataWithKey(key, value: value)
         log(.privacyUpdated(setting: "metaDataWithKey", value: [key: value]))
     }
