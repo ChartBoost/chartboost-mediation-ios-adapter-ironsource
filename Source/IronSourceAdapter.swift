@@ -11,19 +11,27 @@ import IronSource
 final class IronSourceAdapter: PartnerAdapter {
     
     /// The version of the partner SDK.
-    let partnerSDKVersion = IronSource.sdkVersion()
-    
+    var partnerSDKVersion: String {
+        IronSourceAdapterConfiguration.partnerSDKVersion
+    }
+
     /// The version of the adapter.
     /// It should have either 5 or 6 digits separated by periods, where the first digit is Chartboost Mediation SDK's major version, the last digit is the adapter's build version, and intermediate digits are the partner SDK's version.
     /// Format: `<Chartboost Mediation major version>.<Partner major version>.<Partner minor version>.<Partner patch version>.<Partner build version>.<Adapter build version>` where `.<Partner build version>` is optional.
-    let adapterVersion = "4.7.9.1.0.0"
-    
+    var adapterVersion: String {
+        IronSourceAdapterConfiguration.adapterVersion
+    }
+
     /// The partner's unique identifier.
-    let partnerID = "ironsource"
-    
+    var partnerID: String {
+        IronSourceAdapterConfiguration.partnerID
+    }
+
     /// The human-friendly partner name.
-    let partnerDisplayName = "IronSource"
-    
+    var partnerDisplayName: String {
+        IronSourceAdapterConfiguration.partnerDisplayName
+    }
+
     /// Ad storage managed by Chartboost Mediation SDK.
     let storage: PartnerAdapterStorage
     
