@@ -9,28 +9,9 @@ import IronSource
 
 /// The Chartboost Mediation IronSource adapter.
 final class IronSourceAdapter: PartnerAdapter {
-    
-    /// The version of the partner SDK.
-    var partnerSDKVersion: String {
-        IronSourceAdapterConfiguration.partnerSDKVersion
-    }
-
-    /// The version of the adapter.
-    /// It should have either 5 or 6 digits separated by periods, where the first digit is Chartboost Mediation SDK's major version, the last digit is the adapter's build version, and intermediate digits are the partner SDK's version.
-    /// Format: `<Chartboost Mediation major version>.<Partner major version>.<Partner minor version>.<Partner patch version>.<Partner build version>.<Adapter build version>` where `.<Partner build version>` is optional.
-    var adapterVersion: String {
-        IronSourceAdapterConfiguration.adapterVersion
-    }
-
-    /// The partner's unique identifier.
-    var partnerID: String {
-        IronSourceAdapterConfiguration.partnerID
-    }
-
-    /// The human-friendly partner name.
-    var partnerDisplayName: String {
-        IronSourceAdapterConfiguration.partnerDisplayName
-    }
+    /// The adapter configuration type that contains adapter and partner info.
+    /// It may also be used to expose custom partner SDK options to the publisher.
+    var configuration: PartnerAdapterConfiguration.Type { IronSourceAdapterConfiguration.self }
 
     /// Ad storage managed by Chartboost Mediation SDK.
     let storage: PartnerAdapterStorage
@@ -94,8 +75,8 @@ final class IronSourceAdapter: PartnerAdapter {
     /// - parameter modifiedKeys: A set containing all the keys that changed.
     func setConsents(_ consents: [ConsentKey: ConsentValue], modifiedKeys: Set<ConsentKey>) {
         // See https://developers.is.com/ironsource-mobile/ios/regulation-advanced-settings/#step-1
-        if modifiedKeys.contains(partnerID) || modifiedKeys.contains(ConsentKeys.gdprConsentGiven) {
-            let consent = consents[partnerID] ?? consents[ConsentKeys.gdprConsentGiven]
+        if modifiedKeys.contains(configuration.partnerID) || modifiedKeys.contains(ConsentKeys.gdprConsentGiven) {
+            let consent = consents[configuration.partnerID] ?? consents[ConsentKeys.gdprConsentGiven]
             switch consent {
             case ConsentValues.granted:
                 IronSource.setConsent(true)
