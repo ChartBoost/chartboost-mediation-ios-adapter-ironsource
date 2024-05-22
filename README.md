@@ -8,7 +8,7 @@ The Chartboost Mediation IronSource adapter mediates IronSource via the Chartboo
 | ------ | ------ |
 | Chartboost Mediation SDK | 4.0.0+ |
 | Cocoapods | 1.11.3+ |
-| iOS | 10.0+ |
+| iOS | 12.0+ |
 | Xcode | 14.3+ |
 
 ## Integration
