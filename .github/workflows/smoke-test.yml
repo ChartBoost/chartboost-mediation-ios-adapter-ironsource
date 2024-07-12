@@ -10,8 +10,14 @@ on:
 
 jobs:
   validate-podspec:
-    runs-on: macos-13  # Last macOS version to support Xcode 14
+    runs-on: macos-latest
     steps:
-      - uses: chartboost/chartboost-mediation-ios-actions/adapter-smoke-test@v1
+      - name: Setup Xcode version
+        uses: maxim-lobanov/setup-xcode@v1.6.0
+        with:
+          xcode-version: '15.3' # IronSource requires Xcode 15.3 starting in version 8.2.0.0
+
+      - name: Adapter smoke test
+        uses: chartboost/chartboost-mediation-ios-actions/adapter-smoke-test@v1
         with:
           allow-warnings: true
