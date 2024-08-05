@@ -16,8 +16,8 @@ final class IronSourceAdapter: PartnerAdapter {
     /// The version of the adapter.
     /// It should have either 5 or 6 digits separated by periods, where the first digit is Chartboost Mediation SDK's major version, the last digit is the adapter's build version, and intermediate digits are the partner SDK's version.
     /// Format: `<Chartboost Mediation major version>.<Partner major version>.<Partner minor version>.<Partner patch version>.<Partner build version>.<Adapter build version>` where `.<Partner build version>` is optional.
-    let adapterVersion = "4.8.2.0.0.0"
-    
+    let adapterVersion = "4.8.2.0.0.1"
+
     /// The partner's unique identifier.
     let partnerIdentifier = "ironsource"
     
@@ -72,8 +72,8 @@ final class IronSourceAdapter: PartnerAdapter {
     /// - parameter request: Information about the ad load request.
     /// - parameter completion: Closure to be performed with the fetched info.
     func fetchBidderInformation(request: PreBidRequest, completion: @escaping ([String : String]?) -> Void) {
-        // IronSource does not currently provide any bidding token
-        completion(nil)
+        let token = IronSource.getISDemandOnlyBiddingData()
+        completion(["token": token])
     }
     
     /// Indicates if GDPR applies or not and the user's GDPR consent status.
