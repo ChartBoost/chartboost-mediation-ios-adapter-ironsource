@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Chartboost, Inc.
+// Copyright 2022-2025 Chartboost, Inc.
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
@@ -48,8 +48,6 @@ final class IronSourceAdapter: PartnerAdapter {
 
         // Initialize IronSource. Must be performed on the main queue.
         DispatchQueue.main.async {
-            IronSource.initISDemandOnly(appKey, adUnits: configuration.lineItems ?? [])
-
             let router = IronSourceAdapterRouter(adapter: self)
             self.router = router    // keep the router instance alive
 
@@ -58,8 +56,19 @@ final class IronSourceAdapter: PartnerAdapter {
             IronSource.setISDemandOnlyInterstitialDelegate(router)
             IronSource.setISDemandOnlyRewardedVideoDelegate(router)
 
-            self.log(.setUpSucceded)
-            completion(.success([:]))
+            let builder = ISAInitRequestBuilder(appKey: appKey)
+                .withLegacyAdFormats([.init(adFormatType: .interstitial), .init(adFormatType: .rewarded)])
+                .withLogLevel(.verbose)
+            let request = builder.build()
+            IronSourceAds.initWith(request) { _, error in
+                if let error {
+                    self.log(.setUpFailed(error))
+                    completion(.failure(error))
+                } else {
+                    self.log(.setUpSucceded)
+                    completion(.success([:]))
+                }
+            }
         }
     }
 
@@ -155,14 +164,11 @@ final class IronSourceAdapter: PartnerAdapter {
 /// Convenience extension to access IronSource credentials from the configuration.
 extension PartnerConfiguration {
     fileprivate var appKey: String? { credentials[.appKeyKey] as? String }
-    fileprivate var lineItems: [String]? { credentials[.lineItemsKey] as? [String] }
 }
 
 extension String {
     /// IronSource app key credentials key
     fileprivate static let appKeyKey = "app_key"
-    /// IronSource line items credentials key
-    fileprivate static let lineItemsKey = "line_items"
     /// IronSource CCPA metadata key
     fileprivate static let doNotSellKey = "do_not_sell"
     /// IronSource COPPA metadata key
