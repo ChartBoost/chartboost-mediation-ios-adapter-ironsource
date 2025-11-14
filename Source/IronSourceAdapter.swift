@@ -90,10 +90,10 @@ final class IronSourceAdapter: PartnerAdapter {
             let consent = consents[configuration.partnerID] ?? consents[ConsentKeys.gdprConsentGiven]
             switch consent {
             case ConsentValues.granted:
-                IronSource.setConsent(true)
+                LevelPlay.setConsent(true)
                 log(.privacyUpdated(setting: "consent", value: true))
             case ConsentValues.denied:
-                IronSource.setConsent(false)
+                LevelPlay.setConsent(false)
                 log(.privacyUpdated(setting: "consent", value: false))
             default:
                 break   // do nothing
@@ -107,7 +107,7 @@ final class IronSourceAdapter: PartnerAdapter {
             let hasGivenConsent = consents[ConsentKeys.ccpaOptIn] == ConsentValues.granted
             let key: String = .doNotSellKey
             let value: String = hasGivenConsent ? .no : .yes
-            IronSource.setMetaDataWithKey(key, value: value)
+            LevelPlay.setMetaDataWithKey(key, value: value)
             log(.privacyUpdated(setting: "metaDataWithKey", value: [key: value]))
         }
     }
@@ -118,7 +118,7 @@ final class IronSourceAdapter: PartnerAdapter {
         // See https://developers.is.com/ironsource-mobile/ios/regulation-advanced-settings/#step-3
         let key: String = .coppaKey
         let value: String = isUserUnderage ? .yes : .no
-        IronSource.setMetaDataWithKey(key, value: value)
+        LevelPlay.setMetaDataWithKey(key, value: value)
         log(.privacyUpdated(setting: "metaDataWithKey", value: [key: value]))
     }
 
