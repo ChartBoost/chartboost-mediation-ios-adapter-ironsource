@@ -11,7 +11,7 @@ import IronSource
 @objc public class IronSourceAdapterConfiguration: NSObject, PartnerAdapterConfiguration {
     /// The version of the partner SDK.
     @objc public static var partnerSDKVersion: String {
-        IronSource.sdkVersion()
+        LevelPlay.sdkVersion()
     }
 
     /// The version of the adapter.
@@ -19,7 +19,7 @@ import IronSource
     /// last digit is the adapter's build version, and intermediate digits are the partner SDK's version.
     /// Format: `<Chartboost Mediation major version>.<Partner major version>.<Partner minor version>.<Partner patch version>.
     /// <Partner build version>.<Adapter build version>` where `.<Partner build version>` is optional.
-    @objc public static let adapterVersion = "5.9.3.0.0.0"
+    @objc public static let adapterVersion = "5.9.4.0.0.0"
 
     /// The partner's unique identifier.
     @objc public static let partnerID = "ironsource"
