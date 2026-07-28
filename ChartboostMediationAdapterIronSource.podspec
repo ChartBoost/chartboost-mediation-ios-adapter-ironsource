@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name        = 'ChartboostMediationAdapterIronSource'
-  spec.version     = '5.9.4.1.0.0'
+  spec.version     = '5.9.5.0.0.0'
   spec.license     = { :type => 'MIT', :file => 'LICENSE.md' }
   spec.homepage    = 'https://github.com/ChartBoost/chartboost-mediation-ios-adapter-ironsource'
   spec.authors     = { 'Chartboost' => 'https://www.chartboost.com/' }
@@ -10,7 +10,7 @@ Pod::Spec.new do |spec|
   # Source
   spec.module_name  = 'ChartboostMediationAdapterIronSource'
   spec.source       = { :git => 'https://github.com/ChartBoost/chartboost-mediation-ios-adapter-ironsource.git', :tag => spec.version }
-  spec.source_files = 'Source/**/*.{swift,h,m}'
+  spec.source_files = 'Source/**/*.{swift}'
   spec.resource_bundles = { 'ChartboostMediationAdapterIronSource' => ['PrivacyInfo.xcprivacy'] }
 
   # Minimum supported versions
@@ -19,19 +19,10 @@ Pod::Spec.new do |spec|
 
   # System frameworks used
   spec.ios.frameworks = ['Foundation', 'UIKit']
-  
-  # This adapter is compatible with all Chartboost Mediation 5.X versions of the SDK.
+
+  # Dependencies
   spec.dependency 'ChartboostMediationSDK', '~> 5.0'
+  spec.dependency 'IronSourceSDK', '~> 9.5.0.0'
 
-  # Partner network SDK and version that this adapter is certified to work with.
-  spec.dependency 'IronSourceSDK', '~> 9.4.1.0'
-
-  # IronSource SDK does not support i386 simulators.
-  spec.pod_target_xcconfig = { 
-    'OTHER_LDFLAGS' => '-lObjC',
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386'
-  }
-  
-  # The partner network SDK is a static framework which requires the static_framework option.
   spec.static_framework = true
 end
